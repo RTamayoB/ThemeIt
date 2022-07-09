@@ -4,16 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
@@ -24,41 +25,75 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.rafaeltamayo.themeit.presentation.ui.theme.ThemeItTheme
-
-val items = listOf(
-    Screen.Profile,
-    Screen.FriendsList,
-)
+import com.rafaeltamayo.themeit.presentation.views.CreateTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val navController = rememberNavController()
-            ThemeItTheme {
-                Scaffold(
-                    floatingActionButton = {
-                        FloatingActionButton(
-                            onClick = { /*TODO*/ }) {
-                            Icon(imageVector = Icons.Filled.Add, contentDescription = "Create new theme")
-                        }
-                    },
-                    floatingActionButtonPosition = FabPosition.Center,
-                    isFloatingActionButtonDocked = true,
-                    bottomBar = {
-                        BottomAppBar(
-                            cutoutShape = MaterialTheme.shapes.small.copy(
-                                CornerSize(percent = 50)
-                            )
-                        ) {
-                            BottomNav(navController = navController)
-                        }
+            MainScreen()
+        }
+    }
+}
+
+@Composable
+fun MainScreen() {
+    val bottomBarState = rememberSaveable { (mutableStateOf(true)) }
+
+    ThemeItTheme {
+        val navController = rememberNavController()
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+        when (navBackStackEntry?.destination?.route) {
+            "createTheme" -> {
+                bottomBarState.value = false
+            }
+            "material2List" -> {
+                bottomBarState.value = true
+            }
+            "material3List" -> {
+                bottomBarState.value = true
+            }
+        }
+
+        Scaffold(
+            floatingActionButton = {
+                AnimatedVisibility(
+                    visible = bottomBarState.value,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate("createTheme")
+                        }) {
+                        Icon(imageVector = Icons.Filled.Add, contentDescription = "Create new theme")
                     }
-                ) { innerPadding ->
-                    NavHost(navController, startDestination = Screen.Profile.route, Modifier.padding(innerPadding)) {
-                        composable(Screen.Profile.route) {  }
-                        composable(Screen.FriendsList.route) {  }
+                }
+            },
+            floatingActionButtonPosition = FabPosition.Center,
+            isFloatingActionButtonDocked = true,
+            bottomBar = {
+                BottomBar(
+                    navController = navController,
+                    bottomBarState = bottomBarState
+                )
+            },
+        ) { innerPadding ->
+
+            NavHost(navController, startDestination = Screen.Material2List.route, Modifier.padding(innerPadding)) {
+                composable("createTheme") { CreateTheme() }
+                composable(Screen.Material2List.route) {
+                    LaunchedEffect(Unit) {
+                        bottomBarState.value = true
                     }
+                    Material2List()
+                }
+                composable(Screen.Material3List.route) {
+                    LaunchedEffect(Unit) {
+                        bottomBarState.value = true
+                    }
+                    Material3List()
                 }
             }
         }
@@ -66,19 +101,36 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
+fun BottomBar(navController: NavController, bottomBarState: MutableState<Boolean>) {
+    AnimatedVisibility(
+        visible = bottomBarState.value,
+        enter = slideInVertically(initialOffsetY = { it }),
+        exit = slideOutVertically(targetOffsetY =  { it })
+    ) {
+        BottomAppBar(
+            cutoutShape = MaterialTheme.shapes.small.copy(
+                CornerSize(percent = 50)
+            )
+        ) {
+            BottomNav(navController = navController)
+        }
+    }
 }
 
 @Composable
 fun BottomNav(navController: NavController) {
+    val items = listOf(
+        Screen.Material2List,
+        Screen.Material3List,
+    )
+
     BottomNavigation {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
         items.forEach { screen ->
             BottomNavigationItem(
-                icon = { Icon(Icons.Filled.Favorite, contentDescription = null) },
-                label = { Text(stringResource(screen.resourceId)) },
+                icon = { Icon(screen.icon, contentDescription = null) },
+                label = { Text(screen.tabName) },
                 selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                 onClick = {
                     navController.navigate(screen.route) {
@@ -100,15 +152,25 @@ fun BottomNav(navController: NavController) {
     }
 }
 
+@Composable
+fun Material2List() {
+    Text(text = "Material 2")
+}
+
+@Composable
+fun Material3List() {
+    Text(text = "Material 3")
+}
+
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     ThemeItTheme {
-        Greeting("Android")
+        MainScreen()
     }
 }
 
-sealed class Screen(val route: String, @StringRes val resourceId: Int) {
-    object Profile : Screen("profile", R.string.app_name)
-    object FriendsList : Screen("friendslist", R.string.app_name)
+sealed class Screen(val route: String, val tabName: String, val icon: ImageVector) {
+    object Material2List : Screen("material2List", "Material 2", Icons.Filled.Person)
+    object Material3List : Screen("material3List", "Material 3", Icons.Filled.Phone)
 }
