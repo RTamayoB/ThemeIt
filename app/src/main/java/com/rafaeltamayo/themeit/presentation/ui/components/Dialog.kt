@@ -17,6 +17,7 @@ import com.rafaeltamayo.themeit.presentation.ui.components.colorpicker.HueBar
 
 @Composable
 fun ColorPickerDialog(
+    modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
     onColorChanged: (HSVColor) -> Unit
 ) {
@@ -25,35 +26,28 @@ fun ColorPickerDialog(
         onDismissRequest = onDismissRequest
     ) {
         Card(
-            modifier = Modifier.size(300.dp)
+            modifier = modifier.size(300.dp)
         ) {
             Column {
                 Row(
                     Modifier.weight(.6f)
                 ) {
-                    Column(
-                        modifier = Modifier.weight(.8f)
-                    ) {
-                        ColorGradient(
-                            currentColor = hsvColor.value,
-                            onColorGradientChanged = { saturation, value ->
-                                hsvColor.value = hsvColor.value.copy(saturation = saturation, value = value)
-                                onColorChanged(hsvColor.value)
-                            }
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(.2f)
-                    ) {
-                        HueBar(
-                            hueColor = hsvColor.value,
-                            onHueChanged = { newHue ->
-                                hsvColor.value = hsvColor.value.copy(hue = newHue)
-                                onColorChanged(hsvColor.value)
-                            }
-                        )
-                    }
-
+                    ColorGradient(
+                        modifier = Modifier.weight(.85f),
+                        currentColor = hsvColor.value,
+                        onColorGradientChanged = { saturation, value ->
+                            hsvColor.value = hsvColor.value.copy(saturation = saturation, value = value)
+                            onColorChanged(hsvColor.value)
+                        }
+                    )
+                    HueBar(
+                        modifier = Modifier.weight(.15f),
+                        hueColor = hsvColor.value,
+                        onHueChanged = { newHue ->
+                            hsvColor.value = hsvColor.value.copy(hue = newHue)
+                            onColorChanged(hsvColor.value)
+                        }
+                    )
                 }
                 Row(Modifier.weight(.4f)) {
                     Material500Button(hsvColor.value.toColor())

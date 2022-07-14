@@ -1,23 +1,22 @@
 package com.rafaeltamayo.themeit.presentation.ui.components.colorpicker
 
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.consumePositionChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import com.rafaeltamayo.themeit.presentation.ui.components.drawVerticalSelector
 
 @Composable
 fun HueBar(
@@ -30,6 +29,7 @@ fun HueBar(
     }
     Canvas(
         modifier = modifier
+            .padding(4.dp)
             .fillMaxSize()
             .pointerInput(Unit) {
                 forEachGesture {
@@ -48,46 +48,8 @@ fun HueBar(
         drawRect(Color.Gray, style = Stroke(0.5.dp.toPx()))
 
         val huePoint = getPointFromHue(color = hueColor, height = this.size.height)
-        Log.d("HuePoint", huePoint.toString())
         drawVerticalSelector(huePoint)
     }
-}
-
-internal fun DrawScope.drawVerticalSelector(amount: Float) {
-    val halfIndicatorThickness = 4.dp.toPx()
-    val strokeThickness = 1.dp.toPx()
-
-    val offset =
-        Offset(
-            y = amount - halfIndicatorThickness,
-            x = -strokeThickness
-        )
-    val selectionSize = Size(this.size.width + strokeThickness * 2, halfIndicatorThickness * 2f)
-    drawSelectorIndicator(
-        offset = offset,
-        selectionSize = selectionSize,
-        strokeThicknessPx = strokeThickness
-    )
-}
-
-internal fun DrawScope.drawSelectorIndicator(
-    offset: Offset,
-    selectionSize: Size,
-    strokeThicknessPx: Float
-) {
-    val selectionStyle = Stroke(strokeThicknessPx)
-    drawRect(
-        Color.Gray,
-        topLeft = offset,
-        size = selectionSize,
-        style = selectionStyle
-    )
-    drawRect(
-        Color.White,
-        topLeft = offset + Offset(strokeThicknessPx, strokeThicknessPx),
-        size = selectionSize.inset(2 * strokeThicknessPx),
-        style = selectionStyle
-    )
 }
 
 

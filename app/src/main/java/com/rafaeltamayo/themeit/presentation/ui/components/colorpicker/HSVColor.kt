@@ -18,6 +18,12 @@ data class HSVColor(
         return ColorCompose(colorInt)
     }
 
+    fun getGradientColor(): ColorCompose {
+        val hsvArray = floatArrayOf(hue, 1.0f, 1.0f)
+        val colorInt = ColorGraphics.HSVToColor(hsvArray)
+        return ColorCompose(colorInt)
+    }
+
     companion object {
 
 

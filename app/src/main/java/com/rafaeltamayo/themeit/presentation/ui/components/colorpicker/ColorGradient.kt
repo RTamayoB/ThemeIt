@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -22,10 +23,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
+import com.rafaeltamayo.themeit.presentation.ui.components.drawCircleSelector
 
 
 @Composable
 fun ColorGradient(
+    modifier: Modifier = Modifier,
     currentColor: HSVColor,
     onColorGradientChanged: (saturation: Float, value: Float) -> Unit
 ) {
@@ -34,12 +37,12 @@ fun ColorGradient(
     }
 
     val colorGradient = remember(currentColor.hue) {
-        val hsv = floatArrayOf(currentColor.hue, 1.0f, 1.0f)
-        val rgb = android.graphics.Color.HSVToColor(hsv)
-        Brush.horizontalGradient(listOf(Color(0xFFFFFFFF), Color(rgb)))
+        val colorGradient = currentColor.getGradientColor()
+        Brush.horizontalGradient(listOf(Color(0xFFFFFFFF), colorGradient))
     }
 
-    Canvas(modifier = Modifier
+    Canvas(modifier = modifier
+        .padding(4.dp)
         .fillMaxSize()
         .pointerInput(Unit) {
             forEachGesture {
@@ -48,7 +51,6 @@ fun ColorGradient(
                     val (s, v) = getSaturationPoint(down.position, size)
                     onColorGradientChanged(s, v)
                     drag(down.id) { pointerInputChange ->
-                        Log.d("Pointer","Down")
                         pointerInputChange.consumePositionChange()
                         val (newSaturation, newValue) = getSaturationPoint(pointerInputChange.position, size)
                         onColorGradientChanged(newSaturation, newValue)
@@ -60,26 +62,8 @@ fun ColorGradient(
         drawRect(colorGradient, blendMode = BlendMode.Modulate)
         drawRect(Color.Gray, style = Stroke(0.5.dp.toPx()))
 
-        drawCircleSelector(currentColor)
+        drawCircleSelector(currentColor, getSaturationValuePoint(currentColor, size))
     }
-}
-
-private fun DrawScope.drawCircleSelector(currentColor: HSVColor) {
-    val radius = 6.dp
-    val point = getSaturationValuePoint(currentColor, size = size)
-    val circleStyle = Stroke(2.dp.toPx())
-    drawCircle(
-        color = Color.White,
-        radius = radius.toPx(),
-        center = point,
-        style = circleStyle
-    )
-    drawCircle(
-        color = Color.Gray,
-        radius = (radius - 2.dp).toPx(),
-        center = point,
-        style = Stroke(1.dp.toPx())
-    )
 }
 
 private fun getSaturationPoint(
